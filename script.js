@@ -66,6 +66,19 @@ switch (a) {
     alert(a++);
 }
 
+//То же самое, но с помощью рекурсии:
+var n = +((Math.random() * 15).toFixed(0));
+
+function range(n) {
+  if(n>15){
+    return;
+  }
+  console.log(n); //здесь вывод будет в консоль
+  range(n+1);
+}
+
+range(n);
+
 //5. Реализовать основные 4 арифметические операции в виде функций с двумя параметрами. Обязательно использовать оператор return.
 var a = parseFloat(prompt("Введите первое число:"));
 var b = parseFloat(prompt("Введите второе число:"));
@@ -89,6 +102,10 @@ function multiplication(a,b){
 }
 
 function division(a,b){
+  if(b == 0){
+    alert("На ноль делить нельзя");
+    return;
+  }
   var division = a / b;
   alert("Результат деления первого числа на второе = " + division);
   return division;
@@ -157,25 +174,22 @@ function power(val, pow){
   if(pow == 1){
     return val;
   }
-  else if(val == 0 && pow == 0){
-    result = "Результат 0^0 не определен в математике, потому что лишен смысла.";
+  if(val == 0 && pow == 0){
+    var result = "Результат 0^0 не определен в математике, потому что лишен смысла.";
     return result;
   }
-  else if(pow == 0){
-    result = 1;
-    return result;
+  if(pow == 0){
+    return 1;
   }
-  else if(pow == -1){
+  if(pow == -1){
     result = 1 / val;
     return result;
   }
-  else if(pow < -1){
+  if(pow < -1){
     result = (1 / val) * power(val, pow + 1);
     return result;
   }
-  else {
-    return val * power(val, pow - 1);
-  }
+  return val * power(val, pow - 1);
 }
 
 alert("Результат возведения числа " + val + " в степень " + pow + " равен: " + power(val, pow));
