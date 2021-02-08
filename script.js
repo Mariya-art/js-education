@@ -20,6 +20,27 @@ while(i < 100){
 
 document.write(masPrime);
 
+// еще вариант:
+x = 2;
+
+function checkPrime(num){
+  var i = 2;
+  while(i < num/2){
+    if(num % i == 0){
+      return false;
+    }
+    i++;
+  }
+  return true;
+}
+
+while(x <= 100){
+  if(checkPrime(x)){
+    console.log(x)
+  }
+  x++; 
+} 
+
 //2. Реализовать функционал подсчета стоимости корзины в зависимости от находящихся в ней товаров.
 var goods = [
   {
@@ -67,3 +88,6 @@ for(i = 1; i <= 20; i++){
   var string = mas.join("");
   console.log(string);
 };
+
+// еще вариант (в одну строку):
+for(var i = 1, line = "x"; i <= 20; console.log(line), i++, line += "x");
