@@ -106,7 +106,35 @@ function deletePreviousTotal() {
 document.querySelector(".product__link-next").onclick = nextFunc;//функция по клику на кнопку;
 document.querySelector(".product__link-prev").onclick = prevFunc;//функция по клику на кнопку;
 
+//Круговой слайдер
 function nextFunc(){
+  var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
+  var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
+  if (i !== sources.length-1){ // если картинка не последняя
+    i += 1;//индекс следующей картинки в массиве
+    document.querySelector(".product__img-big").id = +source + 1;//переназначаем id картинке
+  } else {
+    i = 0; // если картинка последняя, то перепрыгиваем на первую
+    document.querySelector(".product__img-big").id = 1;//переназначаем id картинке
+  }
+  document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
+}
+
+function prevFunc(){
+  var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
+  var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
+  if (i !== 0){ // если картинка не первая
+    i -= 1;//индекс предыдущей картинки в массиве
+    document.querySelector(".product__img-big").id = +source - 1;//переназначаем id картинке
+  } else {
+    i = sources.length-1; // если картинка первая, то перепрыгиваем на последнюю
+    document.querySelector(".product__img-big").id = sources.length;//переназначаем id картинке
+  }
+  document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
+}
+
+// Некруговой слайдер
+/*function nextFunc(){
   var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
   if (+source !== sources.length){
     var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
@@ -124,4 +152,4 @@ function prevFunc(){
     document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
     document.querySelector(".product__img-big").id = +source - 1;//переназначаем ей id
   }
-}
+}*/
