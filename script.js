@@ -1,80 +1,155 @@
-//1-3. Создать функцию, генерирующую шахматную доску. Доска должна чередовать черные и белые ячейки. Строки должны нумероваться числами от 1 до 8, столбцы – латинскими буквами A, B, C, D, E, F, G, H. Заполнить доску фигурами, причем все фигуры должны стоять на своих местах и быть соответственно черными и белыми.
+// 1. Доработать функцию замены картинки в галерее таким образом, чтобы она проверяла наличие картинки по указанному в src адресу.
 
-var table = document.createElement('table');
-table.style.borderCollapse = 'collapse';
-table.style.width = '500px';
-table.style.height = '470px';
-table.style.textAlign = 'center';
-var tr, td, i;
-for (i = 0; i < 10; i++){
-  tr = document.createElement('tr');
-  table.append(tr);
-  for (j = 0; j < 10; j++){
-    td = document.createElement('td');
-    td.style.width = '50px';
-    td.style.height = '47px';
-    tr.append(td);
-  }
+// Галерея 1 (вариант, когда большую картинку показываем вместо маленькой)
+var mas = document.querySelectorAll(".gallery__img");
+for (var item of mas) {
+  item.onclick = bigPicture;
 }
-document.getElementsByClassName('chess')[0].append(table);
 
-var str = document.getElementsByTagName('tr');
-for (i = 0; i < str.length; i++){
-  str[0].children[i].innerHTML = str0[i]; // первая и последняя строки с буквами
-  str[0].children[i].style.transform = 'rotate(180deg)';
-  str[0].children[i].style.background = '#F5DEB3';
-  str[9].children[i].innerHTML = str0[i];
-  str[9].children[i].style.background = '#F5DEB3';
-  str[1].children[i].innerHTML = str1[i]; // 1 и 7 строка с фигурами
-  str[7].children[i].innerHTML = str7[i];
-  str[2].children[i].innerHTML = str2[i]; // 2 и 8 строка с фигурами
-  str[8].children[i].innerHTML = str8[i];
-  if (i % 2 == 0){ // шахматный порядок для нечетных строк
-    for (j = 1; j < 9; j++){
-      if (j % 2 !== 0){
-        str[j].children[i].style.background = '#8B4513';
-      } else {
-        str[j].children[i].style.background = '#F5DEB3';
-      }
-    }
-  }
-  if (i % 2 !== 0){ // шахматный порядок для четных строк
-    for (j = 1; j < 9; j++){
-      if (j % 2 !== 0){
-        str[j].children[i].style.background = '#F5DEB3';
-      } else {
-        str[j].children[i].style.background = '#8B4513';
-      }
-    }
-  }
-  if (i == 0){
-    str[3].children[i].innerHTML = '6'; // добавляем цифры в первую колонку
-    str[4].children[i].innerHTML = '5';
-    str[5].children[i].innerHTML = '4';
-    str[6].children[i].innerHTML = '3';
-    for (j = 1; j < 9; j++){ // для первой колонки (с цифрами) закрашиваем темные квадраты в светлый цвет
-      if (j % 2 !== 0){
-        str[j].children[i].style.background = '#F5DEB3';
-      }
-    }
-  }
-  if (i == 9){
-    str[3].children[i].innerHTML = '6'; // добавляем цифры в последнюю колонку
-    str[4].children[i].innerHTML = '5';
-    str[5].children[i].innerHTML = '4';
-    str[6].children[i].innerHTML = '3';
-    for (j = 1; j < 9; j++){
-      str[j].children[i].style.transform = 'rotate(180deg)'; // в последней колонке (с цифрами) переворачиваем цифры
-      str[j].children[i].style.position = 'relative';
-      str[j].children[i].style.left = '1px';
-      if (j % 2 == 0){ // закрашиваем темные квадраты в светлый цвет
-        str[j].children[i].style.background = '#F5DEB3';
-      }
-    }
-  }
-  if (i > 0 && i < 9){ // рамка для ячеек шахматного поля
-    for (j = 1; j < 9; j++){
-      str[j].children[i].style.border = '1px solid #8B4513';
+function bigPicture(e){
+  switch(e.target) {
+    case mas[0]:
+      mas[0].src="img-big/product-1.jpg" 
+      mas[0].setAttribute("onerror", "error()");
+      break;
+    case mas[1]:
+      mas[1].src="img-big/product-2.jpg" 
+      mas[1].setAttribute("onerror", "error()");
+      break;
+    case mas[2]:
+      mas[2].src="img-big/product-3.jpg" 
+      mas[2].setAttribute("onerror", "error()");
+      break; 
+  };
+}
+
+function error(){
+  alert("Файл не найден");
+}
+
+// Галерея 2 (вариант, когда большую картинку показываем после всех маленьких)
+var list = document.querySelector(".gallery__list2");//список, после которого будем ставить большие картинки
+var mas2 = document.querySelectorAll(".gallery__img2");
+for (var item of mas2) {
+  item.onclick = bigPicture2;
+}
+
+function bigPicture2(e) {
+  switch(e.target) {
+    case mas2[0]:
+      list.insertAdjacentHTML("afterEnd", '<img class="gallery__img-big" src="img-big/product-1.jpg" onerror="error2()">');//ставим большую картинку после списка маленьких картинок
+      deletePrevious();//удаляем предыдущие картинки (если они есть)
+      break;
+    case mas2[1]:
+      list.insertAdjacentHTML("afterEnd", '<img class="gallery__img-big" src="img-big/product-2.jpg" onerror="error2()">');
+      deletePrevious();
+      break;
+    case mas2[2]:
+      list.insertAdjacentHTML("afterEnd", '<img class="gallery__img-big" src="img-big/product-3.jpg" onerror="error2()">');
+      deletePrevious();
+      break;   
+  };
+}
+
+function error2(){
+  alert("Файл не найден");
+  document.querySelector(".gallery__img-big").style.display="none";
+}
+
+function deletePrevious() {
+  var masBig = document.querySelectorAll(".gallery__img-big");
+  if (masBig.length > 1) {
+    for (var i=1; i < masBig.length; i++) {
+      masBig[i].style.display="none";
     }
   }
 }
+
+// 2. Реализовать модуль корзины. Создать блок товаров и блок корзины. У каждого товара есть кнопка «Купить», при нажатии на которую происходит добавление имени и цены товара в блок корзины. Корзина должна уметь считать общую сумму заказа.
+
+var cart = document.querySelector(".cart__list");//список товаров в корзине
+var total = 0;//общая стоимость товаров в корзине
+var buy = document.querySelectorAll(".feature__button");//добавляем id для кнопки
+for (var i = 0; i < buy.length; i++) {
+  buy[i].id = products[i].id;
+  buy[i].onclick = buyFunc;//функция по клику на кнопку
+}
+var buy = document.querySelectorAll(".feature__button-text");//добавляем id для текста кнопки, чтобы при нажатии на текст тоже срабатывало
+for (var i = 0; i < buy.length; i++) {
+  buy[i].id = products[i].id;
+}
+var buy = document.querySelectorAll(".feature__button-icon");//добавляем id для иконки корзины, чтобы при нажатии на нее тоже срабатывало
+for (var i = 0; i < buy.length; i++) {
+  buy[i].id = products[i].id;
+}
+
+function buyFunc(e) {
+  var i = products.findIndex(function(entry){return entry.id == e.target.id;}); //находим индекс товара с нужным нам id
+  cart.insertAdjacentHTML("beforeEnd", '<p class="cart__item">'+ products[i].name +'<span class="colortext text-margin text-bold">$'+ products[i].price +'</span></p>');//добавляем товар в корзину (название, цена)
+  document.querySelector(".cart__text").style.display="none";//убираем текст "Ваша корзина пуста"
+  total += products[i].price;//пересчитываем общую стоимость товаров
+  var totalPrice = cart.insertAdjacentHTML("afterEnd", '<div class="total"><p class="total__text">grand total<span class="colortext text-margin text-bold">$'+ total +'</span></p></div>');//добавляем общую стоимость товаров
+  deletePreviousTotal();//удаляем предыдущие расчеты стоимости (если они есть)
+}
+
+function deletePreviousTotal() {
+  var masTotal = document.querySelectorAll(".total");
+  if (masTotal.length > 1) {
+    for (var i=1; i < masTotal.length; i++) {
+      masTotal[i].style.display="none";
+    }
+  }
+}
+
+// 3. *Добавить в галерею функцию перехода к следующему изображению. По сторонам от большой картинки должны быть стрелки «вперед» и «назад», по нажатию на которые происходит замена изображения на следующее или предыдущее.
+
+document.querySelector(".product__link-next").onclick = nextFunc;//функция по клику на кнопку;
+document.querySelector(".product__link-prev").onclick = prevFunc;//функция по клику на кнопку;
+
+//Круговой слайдер
+function nextFunc(){
+  var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
+  var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
+  if (i !== sources.length-1){ // если картинка не последняя
+    i += 1;//индекс следующей картинки в массиве
+    document.querySelector(".product__img-big").id = +source + 1;//переназначаем id картинке
+  } else {
+    i = 0; // если картинка последняя, то перепрыгиваем на первую
+    document.querySelector(".product__img-big").id = 1;//переназначаем id картинке
+  }
+  document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
+}
+
+function prevFunc(){
+  var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
+  var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
+  if (i !== 0){ // если картинка не первая
+    i -= 1;//индекс предыдущей картинки в массиве
+    document.querySelector(".product__img-big").id = +source - 1;//переназначаем id картинке
+  } else {
+    i = sources.length-1; // если картинка первая, то перепрыгиваем на последнюю
+    document.querySelector(".product__img-big").id = sources.length;//переназначаем id картинке
+  }
+  document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
+}
+
+// Некруговой слайдер
+/*function nextFunc(){
+  var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
+  if (+source !== sources.length){
+    var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
+    i += 1;//индекс следующей картинки в массиве
+    document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
+    document.querySelector(".product__img-big").id = +source + 1;//переназначаем ей id
+  }
+}
+
+function prevFunc(){
+  var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
+  if (+source !== 1){
+    var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
+    i -= 1;//индекс предыдущей картинки в массиве
+    document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
+    document.querySelector(".product__img-big").id = +source - 1;//переназначаем ей id
+  }
+}*/
