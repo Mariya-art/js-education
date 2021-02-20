@@ -1,155 +1,246 @@
-// 1. Доработать функцию замены картинки в галерее таким образом, чтобы она проверяла наличие картинки по указанному в src адресу.
+// В игре змейка: Выводить счёт в режиме реального времени. Генерировать временные препятствия на поле. *Убрать границы поля. Т.е. при пересечении границы поля змейка появляется с противоположной стороны.
 
-// Галерея 1 (вариант, когда большую картинку показываем вместо маленькой)
-var mas = document.querySelectorAll(".gallery__img");
-for (var item of mas) {
-  item.onclick = bigPicture;
+var FIELD_SIZE_X = 20;//строки
+var FIELD_SIZE_Y = 20;//столбцы
+var SNAKE_SPEED = 200; // Интервал между перемещениями змейки
+var snake = []; // Сама змейка (массив с ячейками змейки)
+var direction = 'y+'; // Направление движения змейки
+var gameIsRunning = false; // Запущена ли игра
+var snake_timer; // Таймер змейки
+var food_timer; // Таймер для еды
+var score = 0; // Результат
+
+function init() {
+  prepareGameField(); // Генерация поля
+  var wrap = document.getElementsByClassName('wrap')[0];
+  // Подгоняем размер контейнера под игровое поле, если необходимо
+  /*if (16 * (FIELD_SIZE_X + 1) < 380) {
+    wrap.style.width = '380px';
+  }
+  else {
+    wrap.style.width = (16 * (FIELD_SIZE_X + 1)).toString() + 'px';
+  }*/
+  wrap.style.width = '400px';
+  // События кнопок Старт и Новая игра
+  document.getElementById('snake-start').addEventListener('click', startGame);
+  document.getElementById('snake-new').addEventListener('click', refreshGame);
+  // Отслеживание клавиш клавиатуры
+  addEventListener('keydown', changeDirection);
 }
 
-function bigPicture(e){
-  switch(e.target) {
-    case mas[0]:
-      mas[0].src="img-big/product-1.jpg" 
-      mas[0].setAttribute("onerror", "error()");
-      break;
-    case mas[1]:
-      mas[1].src="img-big/product-2.jpg" 
-      mas[1].setAttribute("onerror", "error()");
-      break;
-    case mas[2]:
-      mas[2].src="img-big/product-3.jpg" 
-      mas[2].setAttribute("onerror", "error()");
-      break; 
-  };
+// Функция генерации игрового поля
+function prepareGameField() {
+  var game_table = document.createElement('table');// Создаём таблицу
+  game_table.setAttribute('class', 'game-table');
+
+  for (var i = 0; i < FIELD_SIZE_X; i++) {// Генерация ячеек игровой таблицы
+    var row = document.createElement('tr');// Создание строки
+    row.className = 'game-table-row row-' + i;
+
+    for (var j = 0; j < FIELD_SIZE_Y; j++) {
+      var cell = document.createElement('td');// Создание ячейки
+      cell.className = 'game-table-cell cell-' + i + '-' + j;
+      row.appendChild(cell); // Добавление ячейки
+    }
+    game_table.appendChild(row); // Добавление строки
+  }
+  document.getElementById('snake-field').appendChild(game_table); // Добавление таблицы
 }
 
-function error(){
-  alert("Файл не найден");
+// Старт игры
+function startGame() {
+  gameIsRunning = true;
+  respawn();//создали змейку
+  snake_timer = setInterval(move, SNAKE_SPEED);//каждые 200мс запускаем функцию move
+  setTimeout(createFood, 5000);
+  setTimeout(createBomb, 5000);
 }
 
-// Галерея 2 (вариант, когда большую картинку показываем после всех маленьких)
-var list = document.querySelector(".gallery__list2");//список, после которого будем ставить большие картинки
-var mas2 = document.querySelectorAll(".gallery__img2");
-for (var item of mas2) {
-  item.onclick = bigPicture2;
+// Функция создания змейки на игровом поле
+function respawn() {// Змейка - массив td. Стартовая длина змейки = 2
+  // Respawn змейки из центра
+  var start_coord_x = Math.floor(FIELD_SIZE_X / 2);
+  var start_coord_y = Math.floor(FIELD_SIZE_Y / 2);
+  // Голова змейки
+  var snake_head = document.getElementsByClassName('cell-' + start_coord_y + '-' + start_coord_x)[0];
+  snake_head.classList.add('snake-unit');
+  // Хвост змейки
+  var snake_tail = document.getElementsByClassName('cell-' + (start_coord_y + 1) + '-' + start_coord_x)[0];
+  snake_tail.classList.add('snake-unit');
+
+  snake.push(snake_tail);
+  snake.push(snake_head); // голову добавляем именно последней в массив snake (это важно дальше)
 }
 
-function bigPicture2(e) {
-  switch(e.target) {
-    case mas2[0]:
-      list.insertAdjacentHTML("afterEnd", '<img class="gallery__img-big" src="img-big/product-1.jpg" onerror="error2()">');//ставим большую картинку после списка маленьких картинок
-      deletePrevious();//удаляем предыдущие картинки (если они есть)
-      break;
-    case mas2[1]:
-      list.insertAdjacentHTML("afterEnd", '<img class="gallery__img-big" src="img-big/product-2.jpg" onerror="error2()">');
-      deletePrevious();
-      break;
-    case mas2[2]:
-      list.insertAdjacentHTML("afterEnd", '<img class="gallery__img-big" src="img-big/product-3.jpg" onerror="error2()">');
-      deletePrevious();
-      break;   
-  };
+// Движение змейки
+function move() {
+  // Сборка классов (берем голову змейки, получаем все классы, преобразуем в массив)
+  var snake_head_classes = snake[snake.length - 1].getAttribute('class').split(' ');
+
+  // Сдвиг головы (получаем координаты головы)
+  var new_unit;
+  var snake_coords = snake_head_classes[1].split('-');//преобразовали строку в массив
+  var coord_y = parseInt(snake_coords[1]);
+  var coord_x = parseInt(snake_coords[2]);
+
+  // Определяем новую точку
+  if (direction == 'x-') {
+    new_unit = document.getElementsByClassName('cell-' + (coord_y) + '-' + (coord_x - 1))[0];
+  }
+  else if (direction == 'x+') {
+    new_unit = document.getElementsByClassName('cell-' + (coord_y) + '-' + (coord_x + 1))[0];
+  }
+  else if (direction == 'y+') {
+    new_unit = document.getElementsByClassName('cell-' + (coord_y - 1) + '-' + (coord_x))[0];
+  }
+  else if (direction == 'y-') {
+    new_unit = document.getElementsByClassName('cell-' + (coord_y + 1) + '-' + (coord_x))[0];
+  }
+
+  // Если змейка ушла за границу поля, то показываем ее с другой стороны
+  if (new_unit == undefined) {
+    if (direction == 'x-') {
+      new_unit = document.getElementsByClassName('cell-' + (coord_y) + '-' + (FIELD_SIZE_X - 1))[0];
+    }
+    else if (direction == 'x+') {
+      new_unit = document.getElementsByClassName('cell-' + (coord_y) + '-' + 0)[0];
+    }
+    else if (direction == 'y+') {
+      new_unit = document.getElementsByClassName('cell-' + (FIELD_SIZE_Y - 1) + '-' + (coord_x))[0];
+    }
+    else if (direction == 'y-') {
+      new_unit = document.getElementsByClassName('cell-' + 0 + '-' + (coord_x))[0];
+    }
+  }
+
+  // Проверки: 1) new_unit не часть змейки; 2) Змейка не взорвалась на бомбе
+  if (!isSnakeUnit(new_unit) && !isBombUnit(new_unit)) {
+    // Добавление новой части змейки
+    new_unit.classList.add('snake-unit');
+    snake.push(new_unit);
+    // Проверяем, надо ли убрать хвост
+    if (!haveFood(new_unit)) {// 
+      var removed = snake.splice(0, 1)[0];//удалили из массива змейки первый элемент (это хвост)
+      removed.classList.remove('snake-unit');//у удаленного хвоста убираем классы: змейка и
+      removed.classList.remove('food-unit');//еда (когда еда оказалась в хвосте)
+    }
+  }
+  else {
+    finishTheGame();
+  }
 }
 
-function error2(){
-  alert("Файл не найден");
-  document.querySelector(".gallery__img-big").style.display="none";
+// Проверка на змейку
+function isSnakeUnit(unit) {
+  var check = false;
+  if (snake.includes(unit)) {
+    check = true;
+  }
+  return check;
 }
 
-function deletePrevious() {
-  var masBig = document.querySelectorAll(".gallery__img-big");
-  if (masBig.length > 1) {
-    for (var i=1; i < masBig.length; i++) {
-      masBig[i].style.display="none";
+// Проверка на бомбу
+function isBombUnit(unit) {
+  var check = false;
+  var unit_classes = unit.getAttribute('class').split(' ');
+  if (unit_classes.includes('bomb-unit')) {// Если бомба
+    check = true;  
+  }
+  return check;
+}
+
+// Проверка на еду
+function haveFood(unit) {
+  var check = false;
+  var unit_classes = unit.getAttribute('class').split(' ');
+  if (unit_classes.includes('food-unit')) {// Если еда
+    check = true;
+    createFood();
+    createBomb();
+    score++;
+    document.querySelector('.score').innerText = score;   
+  }
+  return check;
+}
+
+// Создание еды
+function createFood() {
+  var foodCreated = false;
+
+  while (!foodCreated) { //пока еду не создали
+    // рандом
+    var food_x = Math.floor(Math.random() * FIELD_SIZE_X);
+    var food_y = Math.floor(Math.random() * FIELD_SIZE_Y);
+
+    var food_cell = document.getElementsByClassName('cell-' + food_y + '-' + food_x)[0];//находим ячейку по рандомным координатам
+    var food_cell_classes = food_cell.getAttribute('class').split(' ');//переводим в массив все её классы
+
+    // проверка на змейку (чтобы еда не попала на змейку)
+    if (!food_cell_classes.includes('snake-unit')) {
+      food_cell.classList.add('food-unit');
+      foodCreated = true;
     }
   }
 }
 
-// 2. Реализовать модуль корзины. Создать блок товаров и блок корзины. У каждого товара есть кнопка «Купить», при нажатии на которую происходит добавление имени и цены товара в блок корзины. Корзина должна уметь считать общую сумму заказа.
+// Создание бомбочки
+function createBomb() {
+  var bombCreated = false;
 
-var cart = document.querySelector(".cart__list");//список товаров в корзине
-var total = 0;//общая стоимость товаров в корзине
-var buy = document.querySelectorAll(".feature__button");//добавляем id для кнопки
-for (var i = 0; i < buy.length; i++) {
-  buy[i].id = products[i].id;
-  buy[i].onclick = buyFunc;//функция по клику на кнопку
-}
-var buy = document.querySelectorAll(".feature__button-text");//добавляем id для текста кнопки, чтобы при нажатии на текст тоже срабатывало
-for (var i = 0; i < buy.length; i++) {
-  buy[i].id = products[i].id;
-}
-var buy = document.querySelectorAll(".feature__button-icon");//добавляем id для иконки корзины, чтобы при нажатии на нее тоже срабатывало
-for (var i = 0; i < buy.length; i++) {
-  buy[i].id = products[i].id;
-}
+  while (!bombCreated) { //пока бомбу не создали
+    // рандом
+    var bomb_x = Math.floor(Math.random() * FIELD_SIZE_X);
+    var bomb_y = Math.floor(Math.random() * FIELD_SIZE_Y);
 
-function buyFunc(e) {
-  var i = products.findIndex(function(entry){return entry.id == e.target.id;}); //находим индекс товара с нужным нам id
-  cart.insertAdjacentHTML("beforeEnd", '<p class="cart__item">'+ products[i].name +'<span class="colortext text-margin text-bold">$'+ products[i].price +'</span></p>');//добавляем товар в корзину (название, цена)
-  document.querySelector(".cart__text").style.display="none";//убираем текст "Ваша корзина пуста"
-  total += products[i].price;//пересчитываем общую стоимость товаров
-  var totalPrice = cart.insertAdjacentHTML("afterEnd", '<div class="total"><p class="total__text">grand total<span class="colortext text-margin text-bold">$'+ total +'</span></p></div>');//добавляем общую стоимость товаров
-  deletePreviousTotal();//удаляем предыдущие расчеты стоимости (если они есть)
-}
+    var bomb_cell = document.getElementsByClassName('cell-' + bomb_y + '-' + bomb_x)[0];//находим ячейку по рандомным координатам
+    var bomb_cell_classes = bomb_cell.getAttribute('class').split(' ');//переводим в массив все её классы
 
-function deletePreviousTotal() {
-  var masTotal = document.querySelectorAll(".total");
-  if (masTotal.length > 1) {
-    for (var i=1; i < masTotal.length; i++) {
-      masTotal[i].style.display="none";
+    // проверка на змейку и на еду (чтобы бомба не попала на змейку и на еду)
+    if (!bomb_cell_classes.includes('snake-unit') && !bomb_cell_classes.includes('food-unit')) {
+      bomb_cell.classList.add('bomb-unit');
+      bombCreated = true;
     }
   }
 }
 
-// 3. *Добавить в галерею функцию перехода к следующему изображению. По сторонам от большой картинки должны быть стрелки «вперед» и «назад», по нажатию на которые происходит замена изображения на следующее или предыдущее.
-
-document.querySelector(".product__link-next").onclick = nextFunc;//функция по клику на кнопку;
-document.querySelector(".product__link-prev").onclick = prevFunc;//функция по клику на кнопку;
-
-//Круговой слайдер
-function nextFunc(){
-  var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
-  var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
-  if (i !== sources.length-1){ // если картинка не последняя
-    i += 1;//индекс следующей картинки в массиве
-    document.querySelector(".product__img-big").id = +source + 1;//переназначаем id картинке
-  } else {
-    i = 0; // если картинка последняя, то перепрыгиваем на первую
-    document.querySelector(".product__img-big").id = 1;//переназначаем id картинке
-  }
-  document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
-}
-
-function prevFunc(){
-  var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
-  var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
-  if (i !== 0){ // если картинка не первая
-    i -= 1;//индекс предыдущей картинки в массиве
-    document.querySelector(".product__img-big").id = +source - 1;//переназначаем id картинке
-  } else {
-    i = sources.length-1; // если картинка первая, то перепрыгиваем на последнюю
-    document.querySelector(".product__img-big").id = sources.length;//переназначаем id картинке
-  }
-  document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
-}
-
-// Некруговой слайдер
-/*function nextFunc(){
-  var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
-  if (+source !== sources.length){
-    var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
-    i += 1;//индекс следующей картинки в массиве
-    document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
-    document.querySelector(".product__img-big").id = +source + 1;//переназначаем ей id
+// Изменение направления движения змейки
+function changeDirection(e) {
+  console.log(e);
+	switch (e.keyCode) {
+    case 37: // Клавиша влево
+      if (direction != 'x+') {
+        direction = 'x-';
+      }
+      break;
+    case 38: // Клавиша вверх
+      if (direction != 'y-') {
+        direction = 'y+';
+      }
+      break;
+    case 39: // Клавиша вправо
+      if (direction != 'x-') {
+        direction = 'x+';
+      }
+      break;
+    case 40: // Клавиша вниз
+      if (direction != 'y+') {
+        direction = 'y-';
+      }
+      break;
   }
 }
 
-function prevFunc(){
-  var source = document.querySelector(".product__img-big").id;//определяем id текущей картинки
-  if (+source !== 1){
-    var i = sources.findIndex(function(entry){return entry.id == source;});//находим индекс картинки с нужным нам id
-    i -= 1;//индекс предыдущей картинки в массиве
-    document.querySelector(".product__img-big").src = sources[i].src;//переопределяем картинку
-    document.querySelector(".product__img-big").id = +source - 1;//переназначаем ей id
-  }
-}*/
+// Функция завершения игры
+function finishTheGame() {
+  gameIsRunning = false;
+  clearInterval(snake_timer);
+  alert('Вы проиграли! Ваш результат: ' + score.toString());
+}
+
+// Новая игра
+function refreshGame() {
+  location.reload();
+}
+
+// Инициализация
+window.onload = init;
